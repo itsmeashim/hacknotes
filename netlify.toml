@@ -1,0 +1,5 @@
+[template.environment]
+  DATABASE_URL = "PostgreSQL connection string from any provider like Supabase or Neon"
+  BETTER_AUTH_SECRET = "Put Any Random String. For Advanced Users: Generate with `npx @better-auth/cli@latest secret`"
+  BETTER_AUTH_URL = "Your website URL"
+  ALLOW_REGISTRATION = "Set to true to allow multiple users, otherwise only one user can be created"
