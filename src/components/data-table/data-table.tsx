@@ -2,14 +2,15 @@
 
 import { flexRender } from "@tanstack/react-table"
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "~/components/ui/table"
 import { useReadStatus } from "~/modules/writeups/context/read-status-context"
+import { WriteupTableSkeleton } from "~/modules/writeups/lazy-loading-skeleton"
 import { useDataTable } from "./data-table-context"
 
 export function DataTable() {
@@ -41,16 +42,7 @@ export function DataTable() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className='h-[200px] text-center'
-                >
-                  <div className='flex items-center justify-center'>
-                    <div className='h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent' />
-                  </div>
-                </TableCell>
-              </TableRow>
+              <WriteupTableSkeleton />
             ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => {
                 // Initialize read status from the original data

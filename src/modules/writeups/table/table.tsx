@@ -6,7 +6,6 @@ import { DataTable } from "~/components/data-table/data-table"
 import { DataTableViewOptions } from "~/components/data-table/data-table-column-toggle"
 import { DataTableProvider } from "~/components/data-table/data-table-context"
 import { Button } from "~/components/ui/button"
-import { Skeleton } from "~/components/ui/skeleton"
 import { useWriteupsSearch } from "~/hooks/use-writeups-search"
 import { type WriteupWithRelations } from "~/lib/types"
 import { useSession } from "~/modules/common/hooks/use-session"
@@ -181,15 +180,10 @@ export function WriteupsTable() {
           </div>
 
           {/* Show skeleton loader during initial load */}
-          {isLoading && !writeups ? (
-            <div className='space-y-2'>
-              <Skeleton className='h-[400px] w-full' />
-            </div>
-          ) : (
+          
             <div>
-              <DataTable />
+              <DataTable  />
             </div>
-          )}
         </div>
       )}
     </DataTableProvider>
