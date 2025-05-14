@@ -33,7 +33,12 @@ export function WriteupActions({ writeup }: WriteupActionsProps) {
       // Optimistically update the UI without reloading all data
       utils.writeups.getWriteups.setData(
         // We need to match all possible query parameters
-        undefined,
+        {
+          search: "",
+          source: "all",
+          severity: "all",
+          page: 1,
+        },
         (oldData) => {
           if (!oldData) return oldData
 
