@@ -32,8 +32,16 @@ export function NoteModal({ writeupId, initialContent }: NoteModalProps) {
     onSuccess: () => {
       setIsOpen(false)
 
-      // Update the total notes count without reloading the entire list
-      void utils.writeups.totalNotes.invalidate()
+      // Update the total notes count optimistically
+      utils.writeups.totalNotes.setData(
+        undefined,
+        (oldData) => {
+          if (oldData === undefined) return oldData;
+          // If there was no initial content, we're adding a new note
+          // Otherwise, we're just updating an existing note
+          return initialContent ? oldData : oldData + 1;
+        }
+      )
 
       // Optimistically update the UI without reloading all data
       utils.writeups.getWriteups.setData(
@@ -70,11 +78,18 @@ export function NoteModal({ writeupId, initialContent }: NoteModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant='ghost' size='icon'>
+        <Button
+          variant={initialContent ? 'default' : 'ghost'}
+          size='icon'
+          className={cn(
+            initialContent && "bg-purple-600 hover:bg-purple-700 text-white shadow-sm",
+            "transition-all"
+          )}
+        >
           <Pencil
             className={cn(
               "h-3 w-3",
-              initialContent ? "text-green-500" : "text-muted-foreground"
+              initialContent ? "text-white" : "text-muted-foreground"
             )}
           />
         </Button>

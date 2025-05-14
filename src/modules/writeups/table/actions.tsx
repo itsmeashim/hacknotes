@@ -27,8 +27,16 @@ export function WriteupActions({ writeup }: WriteupActionsProps) {
         toggleReadStatus(writeup.id)
       }
 
-      // Update the total reads count without reloading the entire list
-      void utils.writeups.totalReads.invalidate()
+      // Update the total reads count optimistically
+      utils.writeups.totalReads.setData(
+        undefined,
+        (oldData) => {
+          if (oldData === undefined) return oldData;
+          // If currently read, we're marking as unread, so decrement
+          // If currently unread, we're marking as read, so increment
+          return isRead ? oldData - 1 : oldData + 1;
+        }
+      )
 
       // Optimistically update the UI without reloading all data
       utils.writeups.getWriteups.setData(
@@ -76,7 +84,7 @@ export function WriteupActions({ writeup }: WriteupActionsProps) {
         variant='ghost'
         size='icon'
         onClick={() => toggleRead({ writeupId: writeup.id })}
-        className={isRead ? "text-green-500" : ""}
+        title={isRead ? "Mark as unread" : "Mark as read"}
       >
         <Check className='h-3 w-3' />
       </Button>

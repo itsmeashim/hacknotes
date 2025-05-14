@@ -145,42 +145,52 @@ export function WriteupsTable() {
           </div>
 
           {/* Always show the table, but with loading state when needed */}
-          <div className='flex justify-end gap-3'>
-            {writeups && writeups.pageCount > 1 && (
-              <div className='flex items-center justify-end space-x-2'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => {
-                    setPage((p) => Math.max(1, p - 1))
-                  }}
-                  disabled={page === 1 || isFetching}
-                >
-                  <ChevronLeft className='h-4 w-4' />
-                </Button>
-                <div className='text-sm'>
-                  Page {page} of {writeups?.pageCount || 1}
-                </div>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => {
-                    setPage((p) => Math.min(writeups?.pageCount || 1, p + 1))
-                  }}
-                  disabled={page === (writeups?.pageCount || 1) || isFetching}
-                >
-                  <ChevronRight className='h-4 w-4' />
-                </Button>
-              </div>
-            )}
-            <div>
-              <DataTableViewOptions table={table} />
+          <div className='flex justify-between items-center gap-3 mt-4'>
+            <div className="text-sm text-muted-foreground">
+              {writeups && writeups.total > 0 && (
+                <span>Showing {writeups.items.length} of {writeups.total} writeups</span>
+              )}
             </div>
-            <DownloadNotesButton />
+
+            <div className='flex items-center gap-3'>
+              {writeups && writeups.pageCount > 1 && (
+                <div className='flex items-center justify-end space-x-2 bg-muted/20 p-1 rounded-md border border-muted/30'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => {
+                      setPage((p) => Math.max(1, p - 1))
+                    }}
+                    disabled={page === 1 || isFetching}
+                    className="h-8 w-8 p-0 rounded-md"
+                  >
+                    <ChevronLeft className='h-4 w-4' />
+                  </Button>
+                  <div className='text-sm font-medium px-2'>
+                    {page} / {writeups?.pageCount || 1}
+                  </div>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => {
+                      setPage((p) => Math.min(writeups?.pageCount || 1, p + 1))
+                    }}
+                    disabled={page === (writeups?.pageCount || 1) || isFetching}
+                    className="h-8 w-8 p-0 rounded-md"
+                  >
+                    <ChevronRight className='h-4 w-4' />
+                  </Button>
+                </div>
+              )}
+              <div>
+                <DataTableViewOptions table={table} />
+              </div>
+              <DownloadNotesButton />
+            </div>
           </div>
 
           {/* Show skeleton loader during initial load */}
-          
+
             <div>
               <DataTable  />
             </div>

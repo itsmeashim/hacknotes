@@ -174,10 +174,10 @@ export function SearchInput({
           <div className="relative w-full">
             <Input
               ref={searchInputRef}
-              placeholder='Search writeups...'
+              placeholder='Search writeups... (min 3 characters)'
               value={localSearch}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className='w-full'
+              className='w-full shadow-sm focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all'
               // Never disable the input field during searches
               // Prevent form submission on Enter key
               onKeyDown={(e) => {
@@ -188,8 +188,53 @@ export function SearchInput({
               // Auto-focus the input when the component mounts or updates
               autoFocus
             />
-
+            {localSearch && localSearch.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6"
+                onClick={() => {
+                  setLocalSearch('');
+                  onSearchChange('');
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
+
+          {/* Reset All Filters Button */}
+          {(localSearch || authors.length > 0 || programs.length > 0 || bugs.length > 0 ||
+            searchParams.onlyWithNotes || searchParams.onlyRead ||
+            searchParams.source !== 'all' || searchParams.severity !== 'all') && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red-500 border-red-500/30 hover:bg-red-500/10 whitespace-nowrap"
+              onClick={() => {
+                // Clear search
+                setLocalSearch('');
+                onSearchChange('');
+
+                // Clear filters
+                authors.forEach(author => onAuthorRemove(author));
+                programs.forEach(program => onProgramRemove(program));
+                bugs.forEach(bug => onBugRemove(bug));
+
+                // Reset other parameters
+                setSearchParams({
+                  onlyWithNotes: false,
+                  onlyRead: false,
+                  source: 'all',
+                  severity: 'all',
+                  sortBy: 'publishedAt',
+                  sortOrder: 'desc'
+                });
+              }}
+            >
+              Reset All Filters
+            </Button>
+          )}
           <div className='flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full md:w-auto'>
             <Select
               value={searchParams.source}
@@ -197,7 +242,12 @@ export function SearchInput({
                 setSearchParams({ ...searchParams, source: value })
               }
             >
-              <SelectTrigger className='w-full sm:w-[180px]'>
+              <SelectTrigger
+                className={cn(
+                  'w-full sm:w-[180px]',
+                  searchParams.source !== 'all' && 'border-blue-500/50 bg-blue-500/10 font-medium'
+                )}
+              >
                 <SelectValue placeholder='Source' />
               </SelectTrigger>
               <SelectContent>
@@ -212,15 +262,20 @@ export function SearchInput({
                 setSearchParams({ ...searchParams, severity: value })
               }
             >
-              <SelectTrigger className='w-full sm:w-[180px]'>
+              <SelectTrigger
+                className={cn(
+                  'w-full sm:w-[180px]',
+                  searchParams.severity !== 'all' && 'border-orange-500/50 bg-orange-500/10 font-medium'
+                )}
+              >
                 <SelectValue placeholder='Severity' />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value='all'>All Severities</SelectItem>
-                <SelectItem value='critical'>Critical</SelectItem>
-                <SelectItem value='high'>High</SelectItem>
-                <SelectItem value='medium'>Medium</SelectItem>
-                <SelectItem value='low'>Low</SelectItem>
+                <SelectItem value='critical' className="text-red-500 font-medium">Critical</SelectItem>
+                <SelectItem value='high' className="text-orange-500 font-medium">High</SelectItem>
+                <SelectItem value='medium' className="text-yellow-500 font-medium">Medium</SelectItem>
+                <SelectItem value='low' className="text-blue-500 font-medium">Low</SelectItem>
                 <SelectItem value='none'>None</SelectItem>
               </SelectContent>
             </Select>
@@ -260,17 +315,28 @@ export function SearchInput({
               <Button
                 variant='outline'
                 size='sm'
-                className='w-full sm:w-[150px] justify-between'
+                className={cn(
+                  'w-full sm:w-[150px] justify-between transition-all',
+                  authors.length > 0 && 'border-blue-500/50 bg-blue-500/10'
+                )}
               >
-                Search Author
+                <span className="flex items-center gap-1">
+                  Author
+                  {authors.length > 0 && (
+                    <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                      {authors.length}
+                    </span>
+                  )}
+                </span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className='w-[200px] p-0' align='start'>
+            <PopoverContent className='w-[250px] p-0 shadow-lg' align='start'>
               <Command>
                 <CommandInput
                   placeholder='Search authors...'
                   value={authorSearch}
                   onValueChange={setAuthorSearch}
+                  className="border-b"
                 />
                 <CommandGroup>
                   <ScrollArea className='h-[200px]'>
@@ -281,6 +347,7 @@ export function SearchInput({
                           onAuthorAdd(author)
                           setAuthorOpen(false)
                         }}
+                        className="cursor-pointer hover:bg-blue-500/10"
                       >
                         {author}
                       </CommandItem>
@@ -295,17 +362,28 @@ export function SearchInput({
               <Button
                 size='sm'
                 variant='outline'
-                className='w-full sm:w-[150px] justify-between'
+                className={cn(
+                  'w-full sm:w-[150px] justify-between transition-all',
+                  programs.length > 0 && 'border-green-500/50 bg-green-500/10'
+                )}
               >
-                Search Program
+                <span className="flex items-center gap-1">
+                  Program
+                  {programs.length > 0 && (
+                    <span className="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                      {programs.length}
+                    </span>
+                  )}
+                </span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className='w-[200px] p-0' align='start'>
+            <PopoverContent className='w-[250px] p-0 shadow-lg' align='start'>
               <Command>
                 <CommandInput
                   placeholder='Search programs...'
                   value={programSearch}
                   onValueChange={setProgramSearch}
+                  className="border-b"
                 />
                 <CommandGroup>
                   <ScrollArea className='h-[200px]'>
@@ -316,6 +394,7 @@ export function SearchInput({
                           onProgramAdd(program)
                           setProgramOpen(false)
                         }}
+                        className="cursor-pointer hover:bg-green-500/10"
                       >
                         {program}
                       </CommandItem>
@@ -330,17 +409,28 @@ export function SearchInput({
               <Button
                 size='sm'
                 variant='outline'
-                className='w-full sm:w-[150px] justify-between'
+                className={cn(
+                  'w-full sm:w-[150px] justify-between transition-all',
+                  bugs.length > 0 && 'border-red-500/50 bg-red-500/10'
+                )}
               >
-                Search Bug
+                <span className="flex items-center gap-1">
+                  Bug Type
+                  {bugs.length > 0 && (
+                    <span className="bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                      {bugs.length}
+                    </span>
+                  )}
+                </span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className='w-[200px] p-0' align='start'>
+            <PopoverContent className='w-[250px] p-0 shadow-lg' align='start'>
               <Command>
                 <CommandInput
                   placeholder='Search bugs...'
                   value={bugSearch}
                   onValueChange={setBugSearch}
+                  className="border-b"
                 />
                 <CommandGroup>
                   <ScrollArea className='h-[200px]'>
@@ -351,6 +441,7 @@ export function SearchInput({
                           onBugAdd(bug)
                           setBugOpen(false)
                         }}
+                        className="cursor-pointer hover:bg-red-500/10"
                       >
                         {bug}
                       </CommandItem>
@@ -364,20 +455,22 @@ export function SearchInput({
             <Button
               size='sm'
               variant={searchParams.onlyWithNotes ? "default" : "outline"}
-              className='w-full sm:w-auto gap-2'
+              className={cn(
+                'w-full sm:w-auto gap-2 transition-all',
+                searchParams.onlyWithNotes ? 'bg-purple-600 hover:bg-purple-700' : 'hover:border-purple-500/50 hover:bg-purple-500/10'
+              )}
               onClick={() =>
                 setSearchParams({
                   onlyWithNotes: !searchParams.onlyWithNotes,
                 })
               }
-
             >
               <BookMarked className='h-4 w-4' />
               With Notes
               <span
                 className={cn(
-                  "px-2 py-0.5 text-xs rounded-full bg-secondary",
-                  searchParams.onlyWithNotes && " text-white"
+                  "px-2 py-0.5 text-xs rounded-full",
+                  searchParams.onlyWithNotes ? "bg-purple-800 text-white" : "bg-secondary"
                 )}
               >
                 {totalNotes ?? 0}
@@ -386,20 +479,22 @@ export function SearchInput({
             <Button
               size='sm'
               variant={searchParams.onlyRead ? "default" : "outline"}
-              className='w-full sm:w-auto gap-2'
+              className={cn(
+                'w-full sm:w-auto gap-2 transition-all',
+                searchParams.onlyRead ? 'bg-green-600 hover:bg-green-700' : 'hover:border-green-500/50 hover:bg-green-500/10'
+              )}
               onClick={() =>
                 setSearchParams({
                   onlyRead: !searchParams.onlyRead,
                 })
               }
-
             >
               <Check className='h-4 w-4' />
               Read
               <span
                 className={cn(
-                  "px-2 py-0.5 text-xs rounded-full bg-secondary",
-                  searchParams.onlyRead && " text-white"
+                  "px-2 py-0.5 text-xs rounded-full",
+                  searchParams.onlyRead ? "bg-green-800 text-white" : "bg-secondary"
                 )}
               >
                 {totalReads ?? 0}
@@ -409,65 +504,68 @@ export function SearchInput({
         </div>
       </div>
 
-      <div className='flex flex-wrap gap-2'>
-        {authors.map((author) => (
-          <div
-            key={author}
-            className={cn(
-              "inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm",
-              "hover:bg-secondary/80"
-            )}
-          >
-            {author}
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-4 w-4 p-0 hover:bg-transparent'
-              onClick={() => onAuthorRemove(author)}
+      {(authors.length > 0 || programs.length > 0 || bugs.length > 0) && (
+        <div className='flex flex-wrap gap-2 p-2 bg-muted/20 rounded-md border border-muted/30 mt-2'>
+          {authors.map((author) => (
+            <div
+              key={author}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-md bg-blue-500/20 border border-blue-500/30 px-3 py-1 text-sm",
+                "hover:bg-blue-500/30 transition-all shadow-sm"
+              )}
             >
-              <X className='h-3 w-3' />
-            </Button>
-          </div>
-        ))}
-        {programs.map((program) => (
-          <div
-            key={program}
-            className={cn(
-              "inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm",
-              "hover:bg-secondary/80"
-            )}
-          >
-            {program}
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-4 w-4 p-0 hover:bg-transparent'
-              onClick={() => onProgramRemove(program)}
+              <span className="font-medium">Author:</span> {author}
+              <Button
+                variant='ghost'
+                size='icon'
+                className='h-5 w-5 p-0 ml-1 hover:bg-blue-500/20 rounded-full'
+                onClick={() => onAuthorRemove(author)}
+              >
+                <X className='h-3 w-3' />
+              </Button>
+            </div>
+          ))}
+          {programs.map((program) => (
+            <div
+              key={program}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-md bg-green-500/20 border border-green-500/30 px-3 py-1 text-sm",
+                "hover:bg-green-500/30 transition-all shadow-sm"
+              )}
             >
-              <X className='h-3 w-3' />
-            </Button>
-          </div>
-        ))}
-        {bugs.map((bug) => (
-          <div
-            key={bug}
-            className={cn(
-              "inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm",
-              "hover:bg-secondary/80"
-            )}
-          >
-            {bug}
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-4 w-4 p-0 hover:bg-transparent'
-              onClick={() => onBugRemove(bug)}
+              <span className="font-medium">Program:</span> {program}
+              <Button
+                variant='ghost'
+                size='icon'
+                className='h-5 w-5 p-0 ml-1 hover:bg-green-500/20 rounded-full'
+                onClick={() => onProgramRemove(program)}
+              >
+                <X className='h-3 w-3' />
+              </Button>
+            </div>
+          ))}
+          {bugs.map((bug) => (
+            <div
+              key={bug}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-md bg-red-500/20 border border-red-500/30 px-3 py-1 text-sm",
+                "hover:bg-red-500/30 transition-all shadow-sm"
+              )}
             >
-              <X className='h-3 w-3' />
-            </Button>
-          </div>
-        ))}
-      </div>
+              <span className="font-medium">Bug:</span> {bug}
+              <Button
+                variant='ghost'
+                size='icon'
+                className='h-5 w-5 p-0 ml-1 hover:bg-red-500/20 rounded-full'
+                onClick={() => onBugRemove(bug)}
+              >
+                <X className='h-3 w-3' />
+              </Button>
+            </div>
+          ))}
+
+        </div>
+      )}
     </div>
   )
 }

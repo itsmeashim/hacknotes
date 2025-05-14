@@ -3,9 +3,9 @@ import Link from "next/link"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column"
 import { Badge } from "~/components/ui/badge"
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
 } from "~/components/ui/tooltip"
 import { type WriteupWithRelations } from "~/lib/types"
 import { WriteupActions } from "./actions"
@@ -66,15 +66,7 @@ const titleColumn = (
         </Link>
         {row.original.severity && row.original.severity !== "none" && (
           <Badge
-            className={
-              row.original.severity === "critical"
-                ? "bg-red-500"
-                : row.original.severity === "high"
-                ? "bg-orange-500"
-                : row.original.severity === "medium"
-                ? "bg-yellow-500"
-                : "bg-blue-500"
-            }
+            variant={row.original.severity as "critical" | "high" | "medium" | "low"}
             onClick={() => onSeverityChoose(row.original.severity as string)}
           >
             {row.original.severity}
