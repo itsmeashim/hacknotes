@@ -57,14 +57,14 @@ export function DataTable() {
                 if (row.original.id !== undefined) {
                   setInitialReadStatus(row.original.id, row.original.isRead || false)
                 }
-
+                
                 // Use the context's read status if available, otherwise fall back to the original
-                const isRowRead = row.original.id !== undefined
-                  ? readStatus[row.original.id] !== undefined
-                    ? readStatus[row.original.id]
+                const isRowRead = row.original.id !== undefined 
+                  ? readStatus[row.original.id] !== undefined 
+                    ? readStatus[row.original.id] 
                     : row.original.isRead
                   : false
-
+                
                 return (
                   <TableRow
                     key={row.id}

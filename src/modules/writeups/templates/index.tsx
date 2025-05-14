@@ -4,15 +4,14 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { Button } from "~/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card"
-import { useWriteupsSearch } from "~/hooks/use-writeups-search"
+
 import IsAdmin from "~/modules/auth/components/is-admin"
 import { api } from "~/trpc/react"
 import { DeleteAllModal } from "../components/delete-all-modal"
-import { WriteupsTable } from "../table/table"
+import { WriteupsTableWrapper } from "../table/table-wrapper"
 
 export default function WriteupsTemplate() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
-  const [searchParams, setSearchParams] = useWriteupsSearch()
   const utils = api.useUtils()
 
   const fetchMutation = api.writeups.fetchAndCreateFromJson.useMutation({
@@ -88,7 +87,7 @@ export default function WriteupsTemplate() {
           <CardTitle>All Writeups</CardTitle>
         </CardHeader>
         <CardContent className='space-y-4'>
-          <WriteupsTable />
+          <WriteupsTableWrapper />
         </CardContent>
       </Card>
 

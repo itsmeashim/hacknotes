@@ -7,11 +7,11 @@ import Markdown from "react-markdown"
 import { toast } from "sonner"
 import { Button } from "~/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "~/components/ui/dialog"
 import { ScrollArea } from "~/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
@@ -31,8 +31,33 @@ export function NoteModal({ writeupId, initialContent }: NoteModalProps) {
   const { mutate: createNote } = api.writeups.createNote.useMutation({
     onSuccess: () => {
       setIsOpen(false)
-      void utils.writeups.getWriteups.invalidate()
+
+      // Update the total notes count without reloading the entire list
       void utils.writeups.totalNotes.invalidate()
+
+      // Optimistically update the UI without reloading all data
+      utils.writeups.getWriteups.setData(
+        // We need to match all possible query parameters
+        undefined,
+        (oldData) => {
+          if (!oldData) return oldData
+
+          return {
+            ...oldData,
+            items: oldData.items.map((item) => {
+              if (item.id === writeupId) {
+                // Update the note content locally
+                return {
+                  ...item,
+                  note: content
+                }
+              }
+              return item
+            })
+          }
+        }
+      )
+
       toast.success("Note saved")
     },
   })
