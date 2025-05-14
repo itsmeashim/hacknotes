@@ -6,6 +6,7 @@ import { DataTable } from "~/components/data-table/data-table"
 import { DataTableViewOptions } from "~/components/data-table/data-table-column-toggle"
 import { DataTableProvider } from "~/components/data-table/data-table-context"
 import { Button } from "~/components/ui/button"
+import { Skeleton } from "~/components/ui/skeleton"
 import { useWriteupsSearch } from "~/hooks/use-writeups-search"
 import { type WriteupWithRelations } from "~/lib/types"
 import { useSession } from "~/modules/common/hooks/use-session"
@@ -13,6 +14,7 @@ import { api } from "~/trpc/react"
 import { DownloadNotesButton } from "../components/download-notes-button"
 import { SearchInput } from "../components/search-input"
 import { authColumns, columns } from "./column"
+
 export function WriteupsTable() {
   const [searchParams, setSearchParams] = useWriteupsSearch()
   const [page, setPage] = useState(1)
@@ -33,7 +35,7 @@ export function WriteupsTable() {
     searchParams.severity,
   ])
 
-  const { data: writeups, isLoading } = api.writeups.getWriteups.useQuery(
+  const { data: writeups, isLoading, isFetching } = api.writeups.getWriteups.useQuery(
     {
       search: searchParams.search,
       authors: searchParams.authors,
@@ -54,9 +56,12 @@ export function WriteupsTable() {
       page,
     },
     {
-      suspense: true,
+      suspense: false, // Disable suspense to handle loading states manually
+      refetchOnWindowFocus: false, // Don't refetch when window regains focus
     }
   )
+
+
 
   const tableColumns = session?.data
     ? authColumns(
@@ -78,83 +83,112 @@ export function WriteupsTable() {
         (value) => setSearchParams({ severity: value })
       )
 
+  // Simplified state management - we don't need to track searching state anymore
+  // since we've removed all loading indicators
+
   return (
     <DataTableProvider<WriteupWithRelations>
       columns={tableColumns}
       data={writeups?.items ?? []}
-      isLoading={isLoading}
+      isLoading={isLoading || isFetching}
       total={writeups?.pageCount ?? 0}
     >
-      {({ table, isLoading }) => (
+      {({ table }) => (
         <div className='space-y-4'>
           <div className='flex justify-between gap-4'>
             <SearchInput
               search={searchParams.search}
-              onSearchChange={(value) => setSearchParams({ search: value })}
+              onSearchChange={(value) => {
+                // Update the search parameter without blocking the UI
+                setSearchParams((prev) => ({ ...prev, search: value }))
+              }}
               authors={searchParams.authors}
-              onAuthorAdd={(value) =>
-                setSearchParams({ authors: [...searchParams.authors, value] })
-              }
-              onAuthorRemove={(value) =>
-                setSearchParams({
-                  authors: searchParams.authors.filter((a) => a !== value),
-                })
-              }
+              onAuthorAdd={(value) => {
+                setSearchParams((prev) => ({
+                  ...prev,
+                  authors: [...prev.authors, value]
+                }))
+              }}
+              onAuthorRemove={(value) => {
+                setSearchParams((prev) => ({
+                  ...prev,
+                  authors: prev.authors.filter((a) => a !== value),
+                }))
+              }}
               programs={searchParams.programs}
-              onProgramAdd={(value) =>
-                setSearchParams({ programs: [...searchParams.programs, value] })
-              }
-              onProgramRemove={(value) =>
-                setSearchParams({
-                  programs: searchParams.programs.filter((p) => p !== value),
-                })
-              }
+              onProgramAdd={(value) => {
+                setSearchParams((prev) => ({
+                  ...prev,
+                  programs: [...prev.programs, value]
+                }))
+              }}
+              onProgramRemove={(value) => {
+                setSearchParams((prev) => ({
+                  ...prev,
+                  programs: prev.programs.filter((p) => p !== value),
+                }))
+              }}
               bugs={searchParams.bugs}
-              onBugAdd={(value) =>
-                setSearchParams({ bugs: [...searchParams.bugs, value] })
-              }
-              onBugRemove={(value) =>
-                setSearchParams({
-                  bugs: searchParams.bugs.filter((b) => b !== value),
-                })
-              }
+              onBugAdd={(value) => {
+                setSearchParams((prev) => ({
+                  ...prev,
+                  bugs: [...prev.bugs, value]
+                }))
+              }}
+              onBugRemove={(value) => {
+                setSearchParams((prev) => ({
+                  ...prev,
+                  bugs: prev.bugs.filter((b) => b !== value),
+                }))
+              }}
+
             />
           </div>
-          {!isLoading && (
-            <>
-              <div className='flex justify-end gap-3'>
-                {writeups && writeups.pageCount > 1 && (
-                  <div className='flex items-center justify-end space-x-2'>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                    >
-                      <ChevronLeft className='h-4 w-4' />
-                    </Button>
-                    <div className='text-sm'>
-                      Page {page} of {writeups.pageCount}
-                    </div>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() =>
-                        setPage((p) => Math.min(writeups.pageCount, p + 1))
-                      }
-                      disabled={page === writeups.pageCount}
-                    >
-                      <ChevronRight className='h-4 w-4' />
-                    </Button>
-                  </div>
-                )}
-                <div>
-                  <DataTableViewOptions table={table} />
+
+          {/* Always show the table, but with loading state when needed */}
+          <div className='flex justify-end gap-3'>
+            {writeups && writeups.pageCount > 1 && (
+              <div className='flex items-center justify-end space-x-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    setPage((p) => Math.max(1, p - 1))
+                  }}
+                  disabled={page === 1 || isFetching}
+                >
+                  <ChevronLeft className='h-4 w-4' />
+                </Button>
+                <div className='text-sm'>
+                  Page {page} of {writeups?.pageCount || 1}
                 </div>
-                <DownloadNotesButton />
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    setPage((p) => Math.min(writeups?.pageCount || 1, p + 1))
+                  }}
+                  disabled={page === (writeups?.pageCount || 1) || isFetching}
+                >
+                  <ChevronRight className='h-4 w-4' />
+                </Button>
               </div>
+            )}
+            <div>
+              <DataTableViewOptions table={table} />
+            </div>
+            <DownloadNotesButton />
+          </div>
+
+          {/* Show skeleton loader during initial load */}
+          {isLoading && !writeups ? (
+            <div className='space-y-2'>
+              <Skeleton className='h-[400px] w-full' />
+            </div>
+          ) : (
+            <div>
               <DataTable />
-            </>
+            </div>
           )}
         </div>
       )}

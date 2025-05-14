@@ -1,25 +1,25 @@
 import { BookMarked, Check, X } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "~/components/ui/button"
 import {
-  Command,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
+    Command,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
 } from "~/components/ui/command"
 import { Input } from "~/components/ui/input"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "~/components/ui/popover"
 import { ScrollArea } from "~/components/ui/scroll-area"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "~/components/ui/select"
 import { useWriteupsSearch } from "~/hooks/use-writeups-search"
 import { cn } from "~/lib/utils"
@@ -57,6 +57,11 @@ export function SearchInput({
   const [authorOpen, setAuthorOpen] = useState(false)
   const [programOpen, setProgramOpen] = useState(false)
   const [bugOpen, setBugOpen] = useState(false)
+
+  // Local state for search input to maintain focus
+  const [localSearch, setLocalSearch] = useState(search)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const { data: session } = useSession()
 
@@ -108,6 +113,42 @@ export function SearchInput({
     )
   }, [uniqueBugs, bugSearch, bugs])
 
+  // Update local search when prop changes
+  useEffect(() => {
+    setLocalSearch(search)
+  }, [search])
+
+  // Improved debounced search handler with minimum 3-letter requirement
+  const handleSearchChange = useCallback((value: string) => {
+    // Always update local state immediately for responsive UI
+    setLocalSearch(value)
+
+    // Clear any existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+
+    // Only trigger search if value is empty (to clear search) or has at least 3 characters
+    if (value === "" || value.length >= 3) {
+      // Set a new timeout to update the search after a delay
+      searchTimeoutRef.current = setTimeout(() => {
+        // Only trigger search if value has changed
+        if (value !== search) {
+          onSearchChange(value)
+        }
+      }, 600) // Increased debounce time for better performance
+    }
+  }, [onSearchChange, search])
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [])
+
   useEffect(() => {
     if (!authorOpen) {
       setAuthorSearch("")
@@ -130,12 +171,25 @@ export function SearchInput({
     <div className='space-y-4 w-full'>
       <div className='flex flex-col w-full gap-2'>
         <div className='flex flex-col md:flex-row gap-2 items-start md:items-center'>
-          <Input
-            placeholder='Search writeups...'
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className='w-full'
-          />
+          <div className="relative w-full">
+            <Input
+              ref={searchInputRef}
+              placeholder='Search writeups...'
+              value={localSearch}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className='w-full'
+              // Never disable the input field during searches
+              // Prevent form submission on Enter key
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                }
+              }}
+              // Auto-focus the input when the component mounts or updates
+              autoFocus
+            />
+
+          </div>
           <div className='flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full md:w-auto'>
             <Select
               value={searchParams.source}
@@ -316,6 +370,7 @@ export function SearchInput({
                   onlyWithNotes: !searchParams.onlyWithNotes,
                 })
               }
+
             >
               <BookMarked className='h-4 w-4' />
               With Notes
@@ -337,6 +392,7 @@ export function SearchInput({
                   onlyRead: !searchParams.onlyRead,
                 })
               }
+
             >
               <Check className='h-4 w-4' />
               Read

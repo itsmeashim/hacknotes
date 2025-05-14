@@ -1,8 +1,8 @@
 import {
-  parseAsArrayOf,
-  parseAsBoolean,
-  parseAsString,
-  useQueryStates,
+    parseAsArrayOf,
+    parseAsBoolean,
+    parseAsString,
+    useQueryStates,
 } from "nuqs"
 
 export const useWriteupsSearch = () => {
@@ -20,9 +20,9 @@ export const useWriteupsSearch = () => {
       sortOrder: parseAsString.withDefault("desc"),
     },
     {
-      history: "push",
+      history: "replace", // Use replace instead of push to avoid adding to browser history
       shallow: true,
-      throttleMs: 0,
+      throttleMs: 0, // Disable throttling as we're handling debouncing in the component
     }
   )
 }
