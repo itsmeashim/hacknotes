@@ -1,7 +1,7 @@
-import WriteupsTemplate from "~/modules/writeups/templates"
+import WriteupsTemplate from "~/modules/writeups/templates";
 
-interface HomePageProps {}
+type HomePageProps = {};
 
 export default function HomePage({}: HomePageProps) {
-  return <WriteupsTemplate />
+	return <WriteupsTemplate />;
 }

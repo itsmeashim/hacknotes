@@ -15,10 +15,7 @@
 		"noUncheckedIndexedAccess": true,
 		"checkJs": true,
 
-		"types": [
-
-			"@serwist/next/typings"
-		],
+		"types": ["@serwist/next/typings"],
 		/* Bundled projects */
 		"lib": ["dom", "dom.iterable", "ES2022", "WebWorker"],
 		"noEmit": true,
