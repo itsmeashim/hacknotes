@@ -20,6 +20,27 @@ import {
 } from "~/server/db/schema";
 type DbClient = NodePgDatabase<typeof import("~/server/db/schema")>;
 
+interface HackeroneExtracted {
+	state: string;
+	substate: string;
+	severity_rating: string | null;
+	readable_substate: string;
+	created_at: string;
+	visibility: string;
+	disclosed_at: string;
+	has_bounty?: boolean;
+	weakness_names: string[];
+	report_id: number;
+}
+
+interface HackeroneExtra {
+	Link: string;
+	h1_json_url: string;
+	report_id: number;
+	state: string;
+	extracted: HackeroneExtracted;
+}
+
 interface WriteupInput {
 	Links: Array<{ Title: string; Link: string }>;
 	Authors: string[];
@@ -29,6 +50,7 @@ interface WriteupInput {
 	Severity?: string;
 	PublicationDate: string;
 	AddedDate: string;
+	HackeroneExtra?: HackeroneExtra[];
 }
 
 async function main() {
@@ -136,6 +158,27 @@ export async function processWriteups(
 	const filteredWriteups = writeupInputs.filter((data) => {
 		if (data.Links[0]?.Link && existingLinkSet.has(data.Links[0].Link)) {
 			return false;
+		}
+
+		// Skip HackerOne notes with specific substates
+		if (data.Links[0]?.Link?.includes("hackerone.com") && data.HackeroneExtra) {
+			const hackeroneExtra = data.HackeroneExtra;
+			if (Array.isArray(hackeroneExtra) && hackeroneExtra.length > 0) {
+				const extracted = hackeroneExtra[0]?.extracted;
+				if (extracted?.substate) {
+					const substate = extracted.substate.toLowerCase();
+					if (
+						substate === "not-applicable" ||
+						substate === "spam" ||
+						substate === "informative"
+					) {
+						console.log(
+							`Skipping HackerOne report ${data.Links[0].Link} with substate: ${extracted.substate}`,
+						);
+						return false;
+					}
+				}
+			}
 		}
 
 		// Collect unique values while filtering
