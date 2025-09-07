@@ -18,7 +18,7 @@
 		"start": "next start",
 		"typecheck": "tsc --noEmit",
 		"logos": "pnpx tsx logos.ts",
-		"postbuild": "pnpx dotenv-cli -e .env -- tsx scripts/seed-writeups.ts"
+		"postbuild": "pnpm db:push && pnpx dotenv-cli -e .env -- tsx scripts/seed-writeups.ts"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^4.1.3",
